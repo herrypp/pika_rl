@@ -61,21 +61,12 @@ class Keyboard:
         self.keyboard.release(Key.enter)
         self.keyboard.release(Key.left)
 
-    def up_attack(self):
+    def right_attack(self):
         self.keyboard.press(Key.right)
         self.keyboard.press(Key.enter)
         self.sleep()
         self.keyboard.release(Key.enter)
         self.keyboard.release(Key.right)
-
-    def up_right_attack(self):
-        self.keyboard.press(Key.up)
-        self.keyboard.press(Key.right)
-        self.keyboard.press(Key.enter)
-        self.sleep()
-        self.keyboard.release(Key.enter)
-        self.keyboard.release(Key.right)
-        self.keyboard.release(Key.up)
 
     def up_left_attack(self):
         self.keyboard.press(Key.up)
@@ -86,9 +77,18 @@ class Keyboard:
         self.keyboard.release(Key.left)
         self.keyboard.release(Key.up)
 
+    def up_right_attack(self):
+        self.keyboard.press(Key.up)
+        self.keyboard.press(Key.right)
+        self.keyboard.press(Key.enter)
+        self.sleep()
+        self.keyboard.release(Key.enter)
+        self.keyboard.release(Key.right)
+        self.keyboard.release(Key.up)
+
     def up_empty_attack(self):
         self.keyboard.press(Key.up)
-        sleep_half()
+        self.sleep_half()
         self.keyboard.release(Key.up)
         self.keyboard.press(Key.enter)
         self.sleep_half()
