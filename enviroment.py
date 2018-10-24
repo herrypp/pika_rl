@@ -1,7 +1,7 @@
 import cv2
 
 game_cmd = "wine /Users/i_herrywang/rl/pika_rl/pikaball.exe"
-fps = 6
+fps = 12
 screen_left = 510
 screen_top = 341
 screen_right = 939
@@ -10,6 +10,15 @@ screen_width = (screen_right - screen_left)*2
 screen_height = (screen_bottom - screen_top)*2
 input_width = 85
 input_height = 55
+action_size = 11
+batch_size = 32
+TAU = 0.001     #Target Network HyperParameters
+LRA = 0.0001    #Learning rate for Actor
+LRC = 0.001     #Lerning rate for Critic
+buffer_size = 100000
+episode_count = 2
+explore = 100000.
+
 number_image = [cv2.cvtColor(cv2.imread('image/0.png'), cv2.COLOR_RGB2GRAY),
         cv2.cvtColor(cv2.imread('image/1.png'), cv2.COLOR_RGB2GRAY),
         cv2.cvtColor(cv2.imread('image/2.png'), cv2.COLOR_RGB2GRAY),

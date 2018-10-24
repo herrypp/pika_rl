@@ -21,7 +21,6 @@ class Game:
         time.sleep(3)
         self.setting()
         time.sleep(3)
-        self.play()
 
     def setting(self):
         # difficulty : hard
@@ -40,13 +39,21 @@ class Game:
         self.controller.press_enter()
         time.sleep(0.5)
         self.controller.press_enter()
+        time.sleep(0.5)
+        self.controller.press_enter()
+        time.sleep(0.5)
+        self.controller.press_enter()
 
     def reset(self):
         self.state = state.State()
         self.play()
 
     def random_press(self):
-        action = random.randint(1,10)
+        action = random.randint(0,10)
+        self.act(action)
+        
+
+    def act(self, action):
         if action == 1:
             self.controller.up()
         elif action == 2:
@@ -67,7 +74,6 @@ class Game:
             self.controller.up_right_attack()
         elif action == 10:
             self.controller.up_empty_attack()
-
     
         
 

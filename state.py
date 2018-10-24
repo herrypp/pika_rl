@@ -1,22 +1,24 @@
 import cv2
 import pyscreenshot
 import numpy as np
+import time
+import threading
 
 import enviroment
 
 class State:
     def __init__(self):
         self.screen = None
+        self.resize_screen = None
         self.left_score = 0
         self.right_score = 0
-        self.is_game_set = False
-        self.is_score_set = False
-        self.dark_screen_time = 0
+        self.is_episode_start = False
+        self.is_step_start = False
+        self.is_score_change = False
 
     def update(self):
         self.update_screen()
         self.update_score()
-        self.update_set()
 
     def update_screen(self):
         # screenshot the pikaball window
@@ -28,35 +30,53 @@ class State:
         cv2_image = cv2.cvtColor(filter_image, cv2.COLOR_RGB2GRAY)
 
         self.screen = cv2_image
+        self.resize_screen = cv2.resize(cv2_image, (enviroment.input_height, enviroment.input_width))
 
     def update_score(self):
+        self.is_score_change = False
         left_score_img = self.screen[19:77, 94:147]
         right_score_img = self.screen[19:77, 774:827]
 
         new_score = self.get_score(left_score_img)
-        if new_score != -1:
-        	self.left_score = new_score
+        if new_score != -1 and self.left_score != new_score:
+            self.left_score = new_score
+            self.is_score_change = True
+            if new_score == 5:
+                self.is_episode_start = True
+            else:
+                thread = threading.Thread(target=self.set_step_start, args=())
+                thread.daemon = True
+                thread.start()
 
         new_score = self.get_score(right_score_img)
-        if new_score != -1:
-        	self.right_score = new_score
+        if new_score != -1 and self.right_score != new_score:
+            self.right_score = new_score
+            self.is_score_change = True
+            if new_score == 5:
+                self.is_episode_start = True
+            else:
+                thread = threading.Thread(target=self.set_step_start, args=())
+                thread.daemon = True
+                thread.start()
 
-    def update_set(self):
-    	self.is_game_set = False
-    	self.is_score_set = False
+    def check_episode_start(self):
+        if self.is_episode_start:
+            self.is_episode_start = False
+            return True
+        else:
+            return False
 
-    	is_dark = sum(sum(self.screen)) == 0
+    def set_step_start(self):
+        time.sleep(2)
+        self.is_step_start = True
 
-    	if is_dark:
-    		# continuous dark -> game set
-    		if self.dark_screen_time != 0:
-    			self.is_game_set = True
-    		self.dark_screen_time = self.dark_screen_time + 1
-    	else:
-    		# dark only show once -> score set
-    		if self.dark_screen_time != 0:
-    			self.is_score_set = True
-    		self.dark_screen_time = 0
+    def check_step_start(self):
+        if self.is_step_start:
+            self.is_step_start = False
+            return True
+        else:
+            return False
+
 
     def img_filtering(self, img):
         img_filterd = img.copy()
