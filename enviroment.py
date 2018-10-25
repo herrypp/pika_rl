@@ -1,7 +1,9 @@
 import cv2
 
 game_cmd = "wine /Users/i_herrywang/rl/pika_rl/pikaball.exe"
-fps = 10
+model_name = "pika-dqn.h5"
+record_name = "Reward_record.txt"
+fps = 6
 screen_left = 510
 screen_top = 341
 screen_right = 939
@@ -10,6 +12,7 @@ screen_width = (screen_right - screen_left)*2
 screen_height = (screen_bottom - screen_top)*2
 input_width = 255
 input_height = 165
+state_size = 6
 action_size = 11
 batch_size = 32
 

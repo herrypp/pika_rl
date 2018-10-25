@@ -16,6 +16,9 @@ class State:
         self.is_step_start = False
         self.is_score_change = False
         self.input = None
+        self.reward = 0
+        self.crash = False
+        self.white_image_time = 0
 
     def update(self):
         self.update_screen()
@@ -27,6 +30,7 @@ class State:
         pil_image = pyscreenshot.grab(bbox=(enviroment.screen_left, enviroment.screen_top,
          enviroment.screen_right, enviroment.screen_bottom))
         np_image = np.asarray(pil_image)
+        self.crash_detect(np_image)
         # We just concern about pikachu & ball
         filter_image = self.img_filtering(np_image)
         # cv2.imshow('resize image', cv2.resize(filter_image, (enviroment.input_height, enviroment.input_width)))
@@ -39,6 +43,7 @@ class State:
 
     def update_score(self):
         self.is_score_change = False
+        self.reward = 1
         left_score_img = self.screen[19:77, 94:147]
         right_score_img = self.screen[19:77, 774:827]
 
@@ -46,6 +51,7 @@ class State:
         if new_score != -1 and self.left_score != new_score:
             self.left_score = new_score
             self.is_score_change = True
+            self.reward = -100
             if new_score == 5:
                 self.is_episode_start = True
             else:
@@ -57,6 +63,7 @@ class State:
         if new_score != -1 and self.right_score != new_score:
             self.right_score = new_score
             self.is_score_change = True
+            self.reward = 100
             if new_score == 5:
                 self.is_episode_start = True
             else:
@@ -114,11 +121,7 @@ class State:
         object_list.extend(self.find_object(Object.Right_pika))
         object_list.extend(self.find_object(Object.Ball))
         
-        self.input = np.asarray(object_list)
-            
-        print(self.input)
-        
-        
+        self.input = np.asarray(object_list).reshape(1, -1)
 
     def find_object(self, obj):
         start = 0
@@ -152,9 +155,6 @@ class State:
         obj_pattern = light*np.ones([size_y, size_x]).astype(np.uint8)
         image = self.resize_screen[:,start:end]
 
-        print(obj_pattern.shape)
-        print(image.shape)
-
         result = cv2.matchTemplate(obj_pattern, image, method)
         position = np.where(result < 0.1)
         pos_num = len(position[0])
@@ -170,6 +170,20 @@ class State:
             y = y + 4
 
         return [int(x), int(y)]
+
+    def crash_detect(self, np_image):
+        debug_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2GRAY)
+        # white image
+        if sum(sum(debug_image)) > 150000:
+            print('detect white screen')
+            self.white_image_time = self.white_image_time + 1
+        else:
+            self.white_image_time = 0
+
+        if self.white_image_time >=3:
+            print('detect crash')
+            self.crash = True
+
 
 class Object:
     Left_pika = 0

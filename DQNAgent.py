@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 from collections import deque
-from keras.model import Sequential
+from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 
@@ -40,6 +40,7 @@ class DQNAgent:
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
+            # print('state = ', state, ', action = ', action, ', reward = ', reward)
             target = reward
             if not done:
                 target = (reward + self.gamma *
