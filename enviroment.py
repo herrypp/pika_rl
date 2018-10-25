@@ -3,7 +3,7 @@ import cv2
 game_cmd = "wine /Users/i_herrywang/rl/pika_rl/pikaball.exe"
 model_name = "pika-dqn.h5"
 record_name = "Reward_record.txt"
-fps = 6
+epsilon_name = "epsilon.txt"
 screen_left = 510
 screen_top = 341
 screen_right = 939

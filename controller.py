@@ -5,7 +5,7 @@ import time
 class Keyboard:
     def __init__(self):
         self.keyboard = KeyboardController()
-        self.press_time = 0.2
+        self.press_time = 0.3
 
     def sleep(self):
         time.sleep(self.press_time)

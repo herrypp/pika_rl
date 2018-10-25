@@ -28,6 +28,23 @@ def write_reward(record):
 
     text_file.close()
 
+def read_epsilon():
+    eps = 1
+    if os.path.exists(enviroment.epsilon_name):
+        print('load existing epsilon file : ', enviroment.epsilon_name)
+        text_file = open(enviroment.epsilon_name, "r")
+        eps = text_file.read()
+        if len(eps) > 0:
+            eps = float(eps)
+
+        text_file.close()
+    return eps
+
+def write_epsilon(epsilon):
+    text_file = open(enviroment.epsilon_name, "w")
+    text_file.write(str(epsilon))
+    text_file.close()
+
 def plot_reward(reward_str_list):
     past = 0
     smooth = 0.2
@@ -45,6 +62,7 @@ def main():
     if os.path.exists(enviroment.model_name):
         print('load existing model : ', enviroment.model_name)
         agent.load(enviroment.model_name)
+    agent.epsilon = read_epsilon()
 
     # init game enviroment
     game = pika_game.Game()
@@ -54,6 +72,7 @@ def main():
 
     episode = 1
     reward_record = read_reward()
+    before = time.time()
 
     for i in range(1, game_count+1):
         print('start new game : ', i, ' !!!')
@@ -75,13 +94,15 @@ def main():
                 break
 
             if training_flag:
+                now =  time.time()
+                diff = now - before
+                before = now
                 episode_reward = episode_reward + 1
                 pre_state = game.state.input
                 action = agent.act(pre_state)
                 # print('action : ', action)
                 game.act(action)
 
-            time.sleep(1/enviroment.fps)
             game.state.update()
 
             if training_flag:
@@ -104,6 +125,8 @@ def main():
                 training_flag = False
                 if i % 2 == 0:
                     agent.save(enviroment.model_name)
+                    write_reward(reward_record)
+                    write_epsilon(agent.epsilon)
                 game.reset()
                 break
             elif game.state.check_step_start():
@@ -117,11 +140,8 @@ def main():
 
         if game.state.crash:
             break
-    
     if not game.state.crash:
-        write_reward(reward_record)
         plot_reward(reward_record)
-    
     return game.state.crash
 
 
