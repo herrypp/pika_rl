@@ -174,7 +174,6 @@ class State:
     def crash_detect(self, np_image):
         debug_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2GRAY)
         light = sum(sum(debug_image))
-        print('light = ', light)
         # white image
         if light > 150000:
             print('detect white screen')

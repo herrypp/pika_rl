@@ -3,6 +3,7 @@ import cv2
 import tensorflow as tf
 import os.path
 from matplotlib import pyplot as plt
+import threading
 
 import enviroment
 import game as pika_game
@@ -57,7 +58,7 @@ def plot_reward(reward_str_list):
     plt.show()
 
 def main():
-    game_count = 6
+    game_count = 6000
     agent = DQNAgent(enviroment.state_size, enviroment.action_size)
     if os.path.exists(enviroment.model_name):
         print('load existing model : ', enviroment.model_name)
@@ -79,11 +80,10 @@ def main():
         game.play()
         time.sleep(1.5)
 
-        print('step start')
+        # print('step start')
         training_flag = True
         episode_reward = 0
         game_reward = 0
-        done = False
         game.state.update()
 
 
@@ -94,33 +94,36 @@ def main():
                 break
 
             if training_flag:
-                now =  time.time()
-                diff = now - before
-                before = now
                 episode_reward = episode_reward + 1
                 pre_state = game.state.input
                 action = agent.act(pre_state)
                 # print('action : ', action)
-                game.act(action)
-
+                
+                thread = threading.Thread(target = game.act, args = (action,))
+                thread.daemon = True
+                thread.start()
+                
             game.state.update()
 
             if training_flag:
                 reward = game.state.reward
                 # print('reward : ', reward)
-                agent.remember(pre_state, action, reward, game.state.input, done)
+                agent.remember(pre_state, action, reward, game.state.input, game.state.is_score_change)
 
             if game.state.is_score_change:
-                print(str(game.state.left_score), ' vs ', str(game.state.right_score))
-                done = True
+                # print(str(game.state.left_score), ' vs ', str(game.state.right_score))
                 episode = episode + 1
                 training_flag = False
                 episode_reward = episode_reward + game.state.reward
                 game_reward = game_reward + episode_reward
-                print("episode: {}, score: {}"
-                      .format(episode, episode_reward))
+                agent.update_target_model()
+                # print("episode: {}, score: {}"
+                #       .format(episode, episode_reward))
             elif game.state.is_episode_start:
                 reward_record.append(str(game_reward))
+                print("game: {}, score: {}"
+                      .format(i, game_reward) ,
+                       str(game.state.left_score), ' vs ', str(game.state.right_score), agent.epsilon)
                 episode_reward = 0
                 training_flag = False
                 if i % 2 == 0:
@@ -132,7 +135,7 @@ def main():
             elif game.state.check_step_start():
                 training_flag = True
                 episode_reward = 0
-                print('step start')
+                # print('step start')
 
             if training_flag:
                 if len(agent.memory) > enviroment.batch_size:
@@ -140,8 +143,10 @@ def main():
 
         if game.state.crash:
             break
+
     if not game.state.crash:
         plot_reward(reward_record)
+
     return game.state.crash
 
 
