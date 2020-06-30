@@ -73,7 +73,6 @@ def main():
 
     episode = 1
     reward_record = read_reward()
-    before = time.time()
 
     for i in range(1, game_count+1):
         print('start new game : ', i, ' !!!')

@@ -1,8 +1,9 @@
 import cv2
-import pyscreenshot
+import mss
 import numpy as np
 import time
 import threading
+from PIL import Image 
 
 import enviroment
 
@@ -28,9 +29,20 @@ class State:
 
     def update_screen(self):
         # screenshot the pikaball window
-        pil_image = pyscreenshot.grab(bbox=(enviroment.screen_left, enviroment.screen_top,
-         enviroment.screen_right, enviroment.screen_bottom))
-        np_image = np.asarray(pil_image)
+        sct = mss.mss()
+        mon = {"top": enviroment.screen_top,
+               "left": enviroment.screen_left,
+               "width": enviroment.screen_right - enviroment.screen_left,
+               "height": enviroment.screen_bottom - enviroment.screen_top}
+        grab_screen = sct.grab(mon)
+        #pil_image = pyscreenshot.grab(bbox=(enviroment.screen_left, enviroment.screen_top,
+        # enviroment.screen_right, enviroment.screen_bottom))
+        img = Image.frombytes("RGB", grab_screen.size, grab_screen.bgra, "raw", "BGRX")
+        #img.save('testtt_'+str(self.i)+'.png')
+        np_image = np.asarray(img)
+        #mss.tools.to_png(grab_screen.rgb, grab_screen.size, output=)
+
+        #np_image = np.asarray(printscreen)
         self.crash_detect(np_image)
         # We just concern about pikachu & ball
         filter_image = self.img_filtering(np_image)
@@ -57,7 +69,7 @@ class State:
             self.input = None
             self.left_score = new_score
             self.is_score_change = True
-            self.reward = -100
+            self.reward = -50
             if new_score == 5:
                 self.is_episode_start = True
             else:
