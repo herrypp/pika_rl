@@ -18,7 +18,8 @@ class State:
         self.input = None
         self.reward = 0
         self.crash = False
-        self.white_image_time = 0
+        self.dark_image_time = 0
+        self.i = 0
 
     def update(self):
         self.update_screen()
@@ -36,6 +37,8 @@ class State:
         # cv2.imshow('resize image', cv2.resize(filter_image, (enviroment.input_height, enviroment.input_width)))
         # cv2.waitKey(1)
         cv2_image = cv2.cvtColor(filter_image, cv2.COLOR_RGB2GRAY)
+        self.i = self.i + 1
+        #cv2.imwrite('cv2_filter_image_'+ str(self.i) +'.png', cv2_image)
 
         self.screen = cv2_image
         self.resize_screen = cv2.resize(cv2_image, (enviroment.input_width, enviroment.input_height))
@@ -44,8 +47,10 @@ class State:
     def update_score(self):
         self.is_score_change = False
         self.reward = 1
-        left_score_img = self.screen[19:77, 94:147]
-        right_score_img = self.screen[19:77, 774:827]
+        left_score_img = self.screen[11:51, 60:95]
+        right_score_img = self.screen[11:51, 485:520]
+        #cv2.imwrite('cv2_left_'+ str(self.i) +'.png', left_score_img)
+        #cv2.imwrite('cv2_right_'+ str(self.i) +'.png', right_score_img)
 
         new_score = self.get_score(left_score_img)
         if new_score != -1 and self.left_score != new_score:
@@ -94,24 +99,30 @@ class State:
     def img_filtering(self, img):
         img_filterd = img.copy()
         # remove pixels containing heavy blue or light red
-        img_filterd[img[:,:,2] > 127] = [0, 0, 0, 255]
-        img_filterd[img[:,:,0] < 160] = [0, 0, 0, 255]
+        img_filterd[img[:,:,2] > 127] = [0, 0, 0]
+        img_filterd[img[:,:,0] < 160] = [0, 0, 0]
 
         return img_filterd
-
+    
+    def check_score(self, score_img, image_set):
+        for img in image_set:
+            if np.array_equal(score_img, img):
+                return True
+            
+        return False
 
     def get_score(self, score_img):
-        if np.array_equal(score_img, enviroment.number_image[0]):
+        if self.check_score(score_img, enviroment.number_image[0]):
             return 0
-        elif np.array_equal(score_img, enviroment.number_image[1]):
+        elif self.check_score(score_img, enviroment.number_image[1]):
             return 1
-        elif np.array_equal(score_img, enviroment.number_image[2]):
+        elif self.check_score(score_img, enviroment.number_image[2]):
             return 2
-        elif np.array_equal(score_img, enviroment.number_image[3]):
+        elif self.check_score(score_img, enviroment.number_image[3]):
             return 3
-        elif np.array_equal(score_img, enviroment.number_image[4]):
+        elif self.check_score(score_img, enviroment.number_image[4]):
             return 4
-        elif np.array_equal(score_img, enviroment.number_image[5]):
+        elif self.check_score(score_img, enviroment.number_image[5]):
             return 5
         else:
             return -1
@@ -139,19 +150,19 @@ class State:
         if obj == Object.Left_pika:
             start = 0
             end = int(enviroment.input_width/2)
-            light = 232
-            size_y = 1
-            size_x = 12
+            light = 213
+            size_y = 10
+            size_x = 10
         elif obj == Object.Right_pika:
             start = int(enviroment.input_width/2)
             end = enviroment.input_width
-            light = 232
-            size_y = 1
-            size_x = 12
+            light = 213
+            size_y = 10
+            size_x = 10
         else:
             start = 0
             end = enviroment.input_width
-            light = 113
+            light = 72
             size_y = 5
             size_x = 5
 
@@ -161,8 +172,12 @@ class State:
         # find pika left
         obj_pattern = light*np.ones([size_y, size_x]).astype(np.uint8)
         image = self.resize_screen[:,start:end]
+        #im = Image.fromarray(image)
+        #im.save('find_' + str(self.i) + '.png')
 
         result = cv2.matchTemplate(obj_pattern, image, method)
+        #if obj == Object.Ball:
+        #    print(result)
         position = np.where(result < 0.1)
         pos_num = len(position[0])
         if pos_num == 0:
@@ -175,20 +190,22 @@ class State:
         elif obj == Object.Right_pika:
             x = x + int(enviroment.input_width/2) + 8
             y = y + 4
-
+            
+        #print('obj = ' + str(obj) + ', x = ' + str(x) + ', y = ' + str(y))
         return [int(x), int(y)]
 
     def crash_detect(self, np_image):
         debug_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2GRAY)
         light = sum(sum(debug_image))
-        # white image
-        if light > 150000:
-            print('detect white screen')
-            self.white_image_time = self.white_image_time + 1
+        #print('light = ' + str(light))
+        # dark image
+        if light < 10000:
+            print('detect dark screen')
+            self.dark_image_time = self.dark_image_time + 1
         else:
-            self.white_image_time = 0
+            self.dark_image_time = 0
 
-        if self.white_image_time >=3:
+        if self.dark_image_time >=3:
             print('detect crash')
             self.crash = True
 

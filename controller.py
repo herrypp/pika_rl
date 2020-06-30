@@ -95,10 +95,10 @@ class Keyboard:
         self.keyboard.release(Key.enter)
         
     def press_command_c(self):
-        self.keyboard.press(Key.cmd)
+        self.keyboard.press(Key.alt)
         self.keyboard.press('c')
         self.sleep_half()
-        self.keyboard.release(Key.cmd)
+        self.keyboard.release(Key.alt)
         self.keyboard.release('c')
 
     def press_s(self):

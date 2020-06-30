@@ -111,7 +111,7 @@ def main():
                 agent.remember(pre_state, action, reward, game.state.input.reshape(1,-1), game.state.is_score_change)
 
             if game.state.is_score_change:
-                # print(str(game.state.left_score), ' vs ', str(game.state.right_score))
+                print(str(game.state.left_score), ' vs ', str(game.state.right_score))
                 episode = episode + 1
                 training_flag = False
                 episode_reward = episode_reward + game.state.reward
